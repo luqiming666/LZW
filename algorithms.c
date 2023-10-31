@@ -1,21 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dictionary.c"
-#include "file.c" // binary file write & read
+#include "dictionary.h"
+//#include "file.c" // binary file write & read
 //#include "list.c"
-#include "array.c" // a faster array for decompression
+#include "array.h" // a faster array for decompression
+#include "algorithms.h"
 
-enum {
-    dictionarySize = 4095, // maximum number of entries defined for the dictionary (2^12 = 4096)
-    codeLength = 12, // the codes which are taking place of the substrings
-    maxValue = dictionarySize - 1
-};
-
-// function declarations
-void compress(FILE *inputFile, FILE *outputFile);
-void decompress(FILE *inputFile, FILE *outputFile);
-int decode(int code, FILE * outputFile);
+int leftover = 0;
+int leftoverBits;
 
 // compression
 void compress(FILE *inputFile, FILE *outputFile) {    
@@ -107,4 +100,41 @@ int decode(int code, FILE * outputFile) {
     //printf("%c", character);
     //appendCharacter(character);
     return temp;
+}
+
+void writeBinary(FILE* output, int code) {
+    if (leftover > 0) {
+        int previousCode = (leftoverBits << 4) + (code >> 8);
+
+        fputc(previousCode, output);
+        fputc(code, output);
+
+        leftover = 0; // no leftover now
+    }
+    else {
+        leftoverBits = code & 0xF; // save leftover, the last 00001111
+        leftover = 1;
+
+        fputc(code >> 4, output);
+    }
+}
+
+int readBinary(FILE* input) {
+    int code = fgetc(input);
+    if (code == EOF) return 0;
+
+    if (leftover > 0) {
+        code = (leftoverBits << 8) + code;
+
+        leftover = 0;
+    }
+    else {
+        int nextCode = fgetc(input);
+
+        leftoverBits = nextCode & 0xF; // save leftover, the last 00001111
+        leftover = 1;
+
+        code = (code << 4) + (nextCode >> 4);
+    }
+    return code;
 }

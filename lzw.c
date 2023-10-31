@@ -10,7 +10,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "algorithms.c" // LZW compression
+#include "algorithms.h" // LZW compression
+
+#pragma warning(disable : 4996)
 
 FILE *inputFile;
 FILE *outputFile;
