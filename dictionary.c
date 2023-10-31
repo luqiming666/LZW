@@ -32,8 +32,11 @@ void appendNode(struct DictNode *node) {
 
 // destroy the whole dictionary down to NULL
 void dictionaryDestroy() {
+    struct DictNode* node;
     while (dictionary != NULL) {
-        dictionary = dictionary->next; /* the head now links to the next element */
+        node = dictionary->next;
+        free(dictionary);
+        dictionary = node; /* the head now links to the next element */
     }
 }
 
